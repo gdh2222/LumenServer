@@ -1,0 +1,15 @@
+﻿
+Warning<CS8603>
+.net 7 이상에서는 null 을 반환하려면 nullable type 으로 반환하거나, null forgiving operator(!) 사용해서 경고를 없앨수있다.
+한가지 이상한점은 참조타입인경우도 nullable type 으로 지정하지 않으면 경고가발생한다.
+ex > Gameversion ver = VersionList.FirstOrdefault(); << Gameversion 은 클래스(참조타입) 이지만 경고가 발생
+
+
+
+
+윈도우 환경변수 셋팅
+서비스 할때 해당 변수 Production 으로 변경해서 서비스
+win+R -> cmd -> 
+setx ASPNETCORE_ENVIRONMENT Development
+
+또는 환경변수 ASPNETCORE_ENVIRONMENT 로 셋팅가능
