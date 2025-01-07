@@ -6,7 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Configuration.AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true);
 
 builder.Services
-.AddControllers(options => 
+.AddControllers(options =>
 {
     // Custom request input parser ÇÊ¿ä½Ã
     // options.InputFormatters.Insert(0, new ProtoBufInputFormatter());
@@ -21,10 +21,10 @@ builder.Services
 {
     options.SerializerSettings.ContractResolver = new DefaultContractResolver();
 })
-.AddJsonOptions(options => 
+.AddJsonOptions(options =>
 {
     // Set PascalCase
-    options.JsonSerializerOptions.PropertyNamingPolicy = null; 
+    options.JsonSerializerOptions.PropertyNamingPolicy = null;
 });
 
 
@@ -32,10 +32,6 @@ builder.Services
 // Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
-
-// Set GlobalConfig
-VersionChecker.GlobalConfig.CDNUrl = builder.Configuration.GetValue("CDNUrl", string.Empty)!;
 
 
 var app = builder.Build();

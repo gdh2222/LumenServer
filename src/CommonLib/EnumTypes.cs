@@ -6,10 +6,14 @@ using System.Threading.Tasks;
 
 namespace CommonLib
 {
-    public enum MARKET_TYPE
+    public enum PLATFORM_TYPE
     {
-        GOOLEPLAY   = 1,
-        APPLESTORE  = 2,
+
+        GUEST       = 1,
+        GOOLEPLAY   = 10,
+        APPLESTORE  = 20,
+
+        // ONESTORE    = 30,
     }
 
     public enum OS_TYPE

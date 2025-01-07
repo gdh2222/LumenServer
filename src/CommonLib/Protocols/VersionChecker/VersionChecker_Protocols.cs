@@ -9,7 +9,6 @@ namespace CommonLib.Protocols.VersionChecker
     public class Req_VersionCheck
     {
         public OS_TYPE OsType { get; set; } = OS_TYPE.ANDROID;
-        public MARKET_TYPE MarketType { get; set; } = MARKET_TYPE.GOOLEPLAY;
         public string Version { get; set; } = string.Empty;
     }
 
