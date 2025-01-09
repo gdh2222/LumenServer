@@ -1,3 +1,5 @@
+using LobbyServer;
+using MySqlConnector;
 using Newtonsoft.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -34,6 +36,11 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 
+// Setup DBConfig
+DBMediator.Contexts.DbConfig.Instance.Setup(builder.Configuration);
+
+
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -47,4 +54,8 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.Run();
+// app.Run();
+
+
+
+TestClass.Test();

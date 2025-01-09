@@ -11,9 +11,13 @@ namespace CommonLib
 
         GUEST       = 1,
         GOOLEPLAY   = 10,
-        APPLESTORE  = 20,
+        APPLE       = 20,
+    }
 
-        // ONESTORE    = 30,
+    public enum MARKET_TYPE
+    {
+        GOOGLE_PLAY = 1,
+        APPLE       = 2,
     }
 
     public enum OS_TYPE

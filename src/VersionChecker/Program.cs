@@ -37,6 +37,10 @@ builder.Services.AddSwaggerGen();
 // Set GlobalConfig
 VersionChecker.GlobalConfig.CDNUrl = builder.Configuration.GetValue("CDNUrl", string.Empty)!;
 
+// Setup DBConfig
+DBMediator.Contexts.DbConfig.Instance.Setup(builder.Configuration);
+
+
 
 var app = builder.Build();
 

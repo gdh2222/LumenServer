@@ -5,11 +5,78 @@ Warning<CS8603>
 ex > Gameversion ver = VersionList.FirstOrdefault(); << Gameversion 은 클래스(참조타입) 이지만 경고가 발생
 
 
-
-
 윈도우 환경변수 셋팅
 서비스 할때 해당 변수 Production 으로 변경해서 서비스
 win+R -> cmd -> 
 setx ASPNETCORE_ENVIRONMENT Development
 
 또는 환경변수 ASPNETCORE_ENVIRONMENT 로 셋팅가능
+
+
+/* 프로젝트 요약 */
+
+Mariadb procedure 성능관련 메모
+	* 
+
+using visual studio extension
+	* EF Core Power Tools
+		* database class mapper
+
+using package
+	* Microsoft.AspNetCore.Mvc.NewtonsoftJson (8.0.11)
+	* MySqlConnector (2.4.0)
+	* Dapper (2.1.35)
+
+
+using database
+	* MariaDB Server 11.4.4 (LTS, End Life 2029-05-29)
+
+using client
+	* Unity 6000.0.32f1 LTS
+
+
+MariaDB Setting
+	* CharacterSet
+		utf8mb4_general_cl support Emoji
+	* default Isolation level
+		* read-commited
+	* not used connection pool
+	
+
+/* 데이터베이스 요약 */
+
+
+
+/* --- Database Schema --- */
+
+/* 싱글데이터베이스 */
+service_db
+	* 게임서비스 관리용 데이터베이스
+		* 점검시간, 버전정보 등등 
+
+account_db
+	* 유저계정정보 데이터베이스
+		* 연동된 유저 정보 등등
+
+/* 샤딩데이터베이스 */
+/* 샤딩은 정적샤딩이기때문에, 초반에 2~4개정도로 서비스하면 무난
+   너무많은 데이터베이스를 샤딩하는경우 관리시, 복잡도가 많이 올라감
+*/
+
+game_db_01
+game_db_02
+	* 유저의 게임서비스 정보 (샤딩)
+		* 인벤토리, 메일함, 계정정보, 등등 
+
+log_db_01
+log_db_02
+	* 로그 데이터베이스
+		* 게임 전반에 걸친 로그 수집용 데이터베이스 (샤딩)
+
+database connection string example
+Server=localhost;Port=33063;Database=game_db_01;Uid=lumen;Pwd=lumen!@!@;
+Server=localhost;Port=33063;Database=game_db_02;Uid=lumen;Pwd=lumen!@!@;
+Server=localhost;Port=33063;Database=log_db_01;Uid=lumen;Pwd=lumen!@!@;
+Server=localhost;Port=33063;Database=log_db_02;Uid=lumen;Pwd=lumen!@!@;
+
+lumen!@!@

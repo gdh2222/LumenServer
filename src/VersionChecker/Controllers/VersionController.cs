@@ -1,5 +1,4 @@
 using CommonLib.Protocols.VersionChecker;
-using DBMediator;
 using Microsoft.AspNetCore.Mvc;
 
 namespace VersionChecker.Controllers
@@ -27,7 +26,7 @@ namespace VersionChecker.Controllers
                 return NoContent();
             }
 
-            string serverVersionString = FakeDB_Service.GetGameVersion((int)ReqParam.OsType);
+            string serverVersionString = FakeDB_Service.GetGameVersion((int)ReqParam.MarketType);
             if (false == Version.TryParse(serverVersionString, out serverVer))
             {
                 // TODO : Send error reason code
@@ -44,7 +43,7 @@ namespace VersionChecker.Controllers
 
 
             // 2. Check Maintenance
-            var maintenanceInfo = FakeDB_Service.GetGameVersion((int)ReqParam.OsType);
+            var maintenanceInfo = FakeDB_Service.GetGameVersion((int)ReqParam.MarketType);
             if(null != maintenanceInfo)
             {
                 // TODO : Send error reason code
@@ -54,7 +53,7 @@ namespace VersionChecker.Controllers
 
 
             // 3. Redirect Gameserver url
-            var redirectInfo = FakeDB_Service.GetRedirectInfo((int)ReqParam.OsType, ReqParam.Version);
+            var redirectInfo = FakeDB_Service.GetRedirectInfo((int)ReqParam.MarketType, ReqParam.Version);
             if(null != redirectInfo)
             {
                 // TODO : Send error reason code
@@ -65,7 +64,7 @@ namespace VersionChecker.Controllers
             // 4. CDN Url 조합
             // Sample Url
             // http://localhost:8080/ANDROID/1.0.0
-            string cdnUrl = $"{GlobalConfig.CDNUrl}/{ReqParam.OsType}/{clientVer.Major}.{clientVer.Minor}.{clientVer.Build}";
+            string cdnUrl = $"{GlobalConfig.CDNUrl}/{ReqParam.MarketType}/{clientVer.Major}.{clientVer.Minor}.{clientVer.Build}";
 
 
             // 5. 성공
