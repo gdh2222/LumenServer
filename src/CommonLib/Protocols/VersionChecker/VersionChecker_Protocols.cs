@@ -1,18 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace CommonLib.Protocols.VersionChecker
+﻿namespace CommonLib.Protocols.VersionChecker
 {
-    public class Req_VersionCheck
+    public class Req_VersionCheck : REQ_Header
     {
         public MARKET_TYPE MarketType { get; set; } = MARKET_TYPE.GOOGLE_PLAY;
         public string Version { get; set; } = string.Empty;
     }
 
-    public class Res_VersionCheck
+    public class Res_VersionCheck : RES_Header
     {
         /// <summary>
         /// 마켓으로 보낼지 여부

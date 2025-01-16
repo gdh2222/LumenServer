@@ -4,8 +4,8 @@ namespace DBMediator.Contexts
 {
     public class DbContext : IDisposable
     {
-        private readonly MySqlConnection _connection;
-        private MySqlTransaction _transaction;
+        protected readonly MySqlConnection _connection;
+        protected MySqlTransaction _transaction;
 
         public DbContext(string connectionString)
         {

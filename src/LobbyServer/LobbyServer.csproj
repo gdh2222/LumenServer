@@ -17,6 +17,7 @@
   <ItemGroup>
     <ProjectReference Include="..\CommonLib\CommonLib.csproj" />
     <ProjectReference Include="..\DBMediator\DBMediator.csproj" />
+    <ProjectReference Include="..\ServerCommon\ServerCommon.csproj" />
   </ItemGroup>
 
 </Project>

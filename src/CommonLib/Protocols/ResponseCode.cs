@@ -8,7 +8,13 @@ namespace CommonLib.Protocols
 {
     public enum RESPONSE_CODE : int
     {
-        SUCCESS         = 0,
+        NONE                = 0,
+
+        SUCCESS             = 1,
+
+
+        INVAILD_VERSION     = 1000,
+
 
 
     }

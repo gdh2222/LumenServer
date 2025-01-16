@@ -1,4 +1,5 @@
 using Newtonsoft.Json.Serialization;
+using ServerCommon;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +17,9 @@ builder.Services
     // options.OutputFormatters.Insert(0, new ProtoBufOutputFormatter());
     // ProtoBufOutputFormatter => OutputFormatter 상속 구현
 
+
+    // registe custom exception filter
+    options.Filters.Add<LunarExceptionFilter>();
 })
 .AddNewtonsoftJson(options =>
 {
