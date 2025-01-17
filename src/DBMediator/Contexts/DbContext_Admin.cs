@@ -21,7 +21,7 @@ namespace DBMediator.Contexts
 
         public Redirectionsinfo GetRedirectionInfo(int marketType, string version)
         {
-            return _connection.Query<Redirectionsinfo>($"SELECT * FROM redirectionsinfo WHERE mkt = _mkt AND version = @_ver", new { _mkt = marketType, _ver = version }).FirstOrDefault();
+            return _connection.Query<Redirectionsinfo>($"SELECT * FROM redirectionsinfo WHERE mkt = @_mkt AND version = @_ver", new { _mkt = marketType, _ver = version }).FirstOrDefault();
         }
 
     }

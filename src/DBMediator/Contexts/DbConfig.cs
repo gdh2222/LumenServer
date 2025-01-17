@@ -45,7 +45,7 @@ namespace DBMediator.Contexts
 
                 foreach(var shardInfo in shardList)
                 {
-                    if( null != shardList.FirstOrDefault(row => row.Uid == shardInfo.Uid))
+                    if( null != _shardlist.FirstOrDefault(row => row.Uid == shardInfo.Uid))
                     {
                         throw new InvalidDataException($"duplicate shard data, uid:{shardInfo.Uid}");
                     }
