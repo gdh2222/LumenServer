@@ -26,14 +26,19 @@
         public string RedirectUrl { get; set; } = string.Empty;
 
         /// <summary>
-        /// 점검 여부
+        /// 점검 상태정보
         /// </summary>
-        public bool IsMaintenance { get; set; }
+        public MaintenanceStatusInfo? MaintenanceInfo { get; set; }
 
         /// <summary>
         /// CDN 주소
         /// </summary>
         public string CDNUrl { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Unity Asset Filelist 이름 또는 파일별 버전관리하는 파일 이름
+        /// </summary>
+        public string AseetFileListName { get; set; } = string.Empty;
     }
 
 

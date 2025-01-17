@@ -1,5 +1,7 @@
+using CommonLib;
 using CommonLib.Protocols;
 using CommonLib.Protocols.VersionChecker;
+using DBMediator.Contexts;
 using Microsoft.AspNetCore.Mvc;
 using ServerCommon;
 
@@ -19,16 +21,16 @@ namespace VersionChecker.Controllers
         [HttpPost("check")]
         public IActionResult Check([FromBody] Req_VersionCheck reqParam)
         {
-            Res_VersionCheck response = new Res_VersionCheck();
+            Res_VersionCheck resultparam = new Res_VersionCheck();
 
-            using (var adminDbContext = new DBMediator.Contexts.DbContextAdmin())
+            using (var adminDbContext = new DbContextAdmin())
             {
                 #region CheckVersion
                 Version? clientVer;
                 Version? serverVer;
                 if (false == Version.TryParse(reqParam.Version, out clientVer))
                 {
-                    return SendError(RESPONSE_CODE.INVAILD_VERSION);
+                    return SendError(RESPONSE_CODE.CRITICAL);
                 }
 
                 string validVersion = adminDbContext.GetGameVersionByMarket((int)reqParam.MarketType);
@@ -36,55 +38,98 @@ namespace VersionChecker.Controllers
                 {
                     if (false == Version.TryParse(validVersion, out serverVer))
                     {
-                        return SendError(RESPONSE_CODE.INVAILD_VERSION);
+                        return SendError(RESPONSE_CODE.CRITICAL);
                     }
 
                     if (serverVer > clientVer)
                     {
                         // 강제업데이트 필요
                         // 강제업데이트 필요시, DB 에서 허용하는 최소 버전을 입력
-                        return SendError(RESPONSE_CODE.INVAILD_VERSION);
+                        return SendError(RESPONSE_CODE.NEED_UPDATE);
                     }
                 }
                 #endregion
 
 
+                #region Maintanence
+                var mtinfo = adminDbContext.GetMaintanenceSchedule();
+                if (null != mtinfo)
+                {
+                    resultparam.MaintenanceInfo = new MaintenanceStatusInfo();
+                    resultparam.MaintenanceInfo.IsMaintenace = true;
+                    resultparam.MaintenanceInfo.StartDate = mtinfo.Startdt;
+                    resultparam.MaintenanceInfo.EndDate = mtinfo.Enddt;
+                    resultparam.MaintenanceInfo.RemainSec = (int)(mtinfo.Enddt - DateTime.Now).TotalSeconds;
+                    return SendSuccess(resultparam);
+                }
+                #endregion
+
+
+                #region Redirect
                 var redirectInfo = adminDbContext.GetRedirectionInfo((int)reqParam.MarketType, reqParam.Version);
                 if (null != redirectInfo)
                 {
-                    response.IsRedirect = true;
-                    response.RedirectUrl = redirectInfo.Authurl;
-                    return SendSuccess(response);
+                    resultparam.IsRedirect = true;
+                    resultparam.RedirectUrl = redirectInfo.Authurl;
+                    return SendSuccess(resultparam);
                 }
+                #endregion
+
+                #region  Make CDN Url
+                switch (reqParam.MarketType)
+                {
+                    case MARKET_TYPE.IOS:
+                        {
+                            string url = string.Format("{0}{1}/iOS/", GlobalConfig.CDN_Prefix, reqParam.Version);
+                            resultparam.CDNUrl = url;
+                            resultparam.AseetFileListName = GlobalConfig.AseetFileName;
+                        }
+                        break;
+
+                    default:
+                        {
+                            string url = string.Format("{0}{1}/Android/", GlobalConfig.CDN_Prefix, reqParam.Version);
+                            resultparam.CDNUrl = url;
+                            resultparam.AseetFileListName = GlobalConfig.AseetFileName;
+                        }
+                        break;
+                }
+
+                var cdnsubinfo = adminDbContext.GetCDNSubSpec((int)reqParam.MarketType, reqParam.Version);
+                if (null != cdnsubinfo)
+                {
+                    if (string.IsNullOrEmpty(cdnsubinfo.Subfolder) == false)
+                    {
+                        string f_subs = cdnsubinfo.Subfolder.Trim();
+                        if (string.IsNullOrEmpty(f_subs) == false)
+                        {
+                            switch (reqParam.MarketType)
+                            {
+                                case MARKET_TYPE.IOS:
+                                    {
+                                        string url = string.Format("{0}{1}/{2}/iOS/", GlobalConfig.CDN_Prefix, reqParam.Version, f_subs);
+                                        resultparam.CDNUrl= url;
+                                        resultparam.AseetFileListName = GlobalConfig.AseetFileName;
+                                    }
+                                    break;
+
+                                default:
+                                    {
+
+                                        string url = string.Format("{0}{1}/{2}/Android/", GlobalConfig.CDN_Prefix, reqParam.Version, f_subs);
+                                        resultparam.CDNUrl = url;
+                                        resultparam.AseetFileListName = GlobalConfig.AseetFileName;
+                                    }
+                                    break;
+                            }
+                        }
+                    }
+                }
+
+                #endregion
             }
 
-
-            //// 2. Check Maintenance
-            //var maintenanceInfo = FakeDB_Service.GetGameVersion((int)ReqParam.MarketType);
-            //if(null != maintenanceInfo)
-            //{
-            //    // TODO : Send error reason code
-            //    // 점검중, 시간 및 점검사유코드 전송
-            //    return NoContent();
-            //}
-
-
-            //// 3. Redirect Gameserver url
-            //var redirectInfo = FakeDB_Service.GetRedirectInfo((int)ReqParam.MarketType, ReqParam.Version);
-            //if(null != redirectInfo)
-            //{
-            //    // TODO : Send error reason code
-            //    // 리다이렉트, 원래 게임서버가아닌, 다른서버로 리다이렉트
-            //    return NoContent();
-            //}
-
-            //// 4. CDN Url 조합
-            //// Sample Url
-            //// http://localhost:8080/ANDROID/1.0.0
-            //string cdnUrl = $"{GlobalConfig.CDNUrl}/{ReqParam.MarketType}/{clientVer.Major}.{clientVer.Minor}.{clientVer.Build}";
-
-
-            return SendSuccess(response);
+            return SendSuccess(resultparam);
         }
     }
 }

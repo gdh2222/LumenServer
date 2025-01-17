@@ -17,13 +17,26 @@ namespace CommonLib
     public enum MARKET_TYPE
     {
         GOOGLE_PLAY = 1,
-        APPLE       = 2,
+        IOS       = 2,
     }
 
     public enum OS_TYPE
     {
         ANDROID     = 1,
-        IOS         = 2,
+        APPLE       = 2,
+    }
+
+    public enum SANCTION_TYPE
+    {
+        /// <summary>
+        /// 제재가 없는 상태입니다.
+        /// </summary>
+        NO_SANCTION,
+
+        /// <summary>
+        /// 일정 시간 동안 제재가 적용되는 상태입니다.
+        /// </summary>
+        TEMPORARY_SANCTION
     }
 
 
