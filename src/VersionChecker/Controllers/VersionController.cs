@@ -3,6 +3,7 @@ using CommonLib.Protocols;
 using CommonLib.Protocols.VersionChecker;
 using DBMediator.Contexts;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using ServerCommon;
 
 namespace VersionChecker.Controllers
@@ -12,18 +13,20 @@ namespace VersionChecker.Controllers
     public class VersionController : LunarController
     {
         private readonly ILogger<VersionController> _logger;
+        private readonly DbContextFactory _factory;
 
-        public VersionController(ILogger<VersionController> logger)
+        public VersionController(ILogger<VersionController> logger, DbContextFactory factory)
         {
             _logger = logger;
+            _factory = factory;
         }
 
         [HttpPost("check")]
-        public IActionResult Check([FromBody] Req_VersionCheck reqParam)
+        public async Task<IActionResult> Check([FromBody] Req_VersionCheck reqParam)
         {
             Res_VersionCheck resultparam = new Res_VersionCheck();
 
-            using (var adminDbContext = new DbContextAdmin())
+            using (var adminDbContext = _factory.Create<DbContextAdmin>())
             {
                 #region CheckVersion
                 Version? clientVer;
@@ -33,10 +36,10 @@ namespace VersionChecker.Controllers
                     return SendError(RESPONSE_CODE.CRITICAL);
                 }
 
-                string validVersion = adminDbContext.GetGameVersionByMarket((int)reqParam.MarketType);
-                if (!string.IsNullOrEmpty(validVersion))
+                var dbVersion = await adminDbContext.Appvalidversions.FirstOrDefaultAsync(r => r.Mkt == (int)reqParam.MktType);
+                if (null != dbVersion)
                 {
-                    if (false == Version.TryParse(validVersion, out serverVer))
+                    if (false == Version.TryParse(dbVersion.Validver, out serverVer))
                     {
                         return SendError(RESPONSE_CODE.CRITICAL);
                     }
@@ -52,7 +55,7 @@ namespace VersionChecker.Controllers
 
 
                 #region Maintanence
-                var mtinfo = adminDbContext.GetMaintanenceSchedule();
+                var mtinfo = await adminDbContext.Maintanenceschedules.FirstOrDefaultAsync(r => r.Startdt <= DateTime.Now && r.Enddt >= DateTime.Now);
                 if (null != mtinfo)
                 {
                     resultparam.MaintenanceInfo = new MaintenanceStatusInfo();
@@ -66,7 +69,7 @@ namespace VersionChecker.Controllers
 
 
                 #region Redirect
-                var redirectInfo = adminDbContext.GetRedirectionInfo((int)reqParam.MarketType, reqParam.Version);
+                var redirectInfo = await adminDbContext.Redirectionsinfos.FirstOrDefaultAsync(r => r.Mkt == (int)reqParam.MktType && r.Version == reqParam.Version);
                 if (null != redirectInfo)
                 {
                     resultparam.IsRedirect = true;
@@ -95,7 +98,7 @@ namespace VersionChecker.Controllers
                         break;
                 }
 
-                var cdnsubinfo = adminDbContext.GetCDNSubSpec((int)reqParam.MarketType, reqParam.Version);
+                var cdnsubinfo = await adminDbContext.Cdnsubspecs.FirstOrDefaultAsync(r => r.Mkt == (int)reqParam.MarketType && r.Version == reqParam.Version);
                 if (null != cdnsubinfo)
                 {
                     if (string.IsNullOrEmpty(cdnsubinfo.Subfolder) == false)
@@ -108,7 +111,7 @@ namespace VersionChecker.Controllers
                                 case MARKET_TYPE.IOS:
                                     {
                                         string url = string.Format("{0}{1}/{2}/iOS/", GlobalConfig.CDN_Prefix, reqParam.Version, f_subs);
-                                        resultparam.CDNUrl= url;
+                                        resultparam.CDNUrl = url;
                                         resultparam.AseetFileListName = GlobalConfig.AseetFileName;
                                     }
                                     break;
