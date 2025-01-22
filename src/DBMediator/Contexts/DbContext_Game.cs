@@ -6,10 +6,11 @@ using System.Threading.Tasks;
 
 namespace DBMediator.Contexts
 {
-    public class DatabaseService
+    public class DbContextGame : DbContext
     {
-        
-
-
+        public DbContextGame(string connectionString) 
+            : base(connectionString)
+        {
+        }
     }
 }

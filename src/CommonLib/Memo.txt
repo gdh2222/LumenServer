@@ -13,21 +13,19 @@ setx ASPNETCORE_ENVIRONMENT Development
 또는 환경변수 ASPNETCORE_ENVIRONMENT 로 셋팅가능
 
 
-/* Visual Studio Database 스켈폴딩 방법 */
-Open Package Manager Console
-	* admin_db  예제
-		command : Scaffold-DbContext "Server=localhost;Port=33063;Database=admin_db;Uid=lumen;Pwd=lumen!@!@;" MySql.EntityFrameworkCore -OutputDir Models -f
-
-
 /* 프로젝트 요약 */
+
+Mariadb procedure 성능관련 메모
+	* 
+
+using visual studio extension
+	* EF Core Power Tools
+		* database class mapper
 
 using package
 	* Microsoft.AspNetCore.Mvc.NewtonsoftJson (8.0.11)
-	* Mysql.EntityFrameworkCore (8.0.8)
-	* Microsoft.EntityFrameworkCore.Tools (8.0.12)
-
-	* Microsoft.Extension.Caching.Memory(8.0.8) -> Due to a critical vulnerability, a manual update was performed.
-	* System.Text.Json(8.0.5) -> Due to a critical vulnerability, a manual update was performed.
+	* MySqlConnector (2.4.0)
+	* Dapper (2.1.35)
 
 
 using database
@@ -37,15 +35,19 @@ using client
 	* Unity 6000.0.32f1 LTS
 
 
-Database Summary
+MariaDB Setting
 	* CharacterSet
 		utf8mb4_general_cl support Emoji
 	* default Isolation level
 		* read-commited
 	* not used connection pool
+	
+
+/* 데이터베이스 요약 */
 
 
-/* Database Schema */
+
+/* --- Database Schema --- */
 
 /* 싱글데이터베이스 */
 service_db
@@ -56,11 +58,10 @@ account_db
 	* 유저계정정보 데이터베이스
 		* 연동된 유저 정보 등등
 
-/* 샤딩데이터베이스
-
-// comment
-	// 샤딩은 정적샤딩이기때문에, 초반에 2~4개정도로 서비스하면 무난
-	// 너무많은 데이터베이스를 샤딩하는경우 관리시, 복잡도가 많이 올라감
+/* 샤딩데이터베이스 */
+/* 샤딩은 정적샤딩이기때문에, 초반에 2~4개정도로 서비스하면 무난
+   너무많은 데이터베이스를 샤딩하는경우 관리시, 복잡도가 많이 올라감
+*/
 
 game_db_01
 game_db_02
@@ -79,112 +80,3 @@ Server=localhost;Port=33063;Database=log_db_01;Uid=lumen;Pwd=lumen!@!@;
 Server=localhost;Port=33063;Database=log_db_02;Uid=lumen;Pwd=lumen!@!@;
 
 lumen!@!@
-
-
-
-
-
-
-
-
-/* EnityFramework 와 같이 ORM 을 사용할때 유의사항 */
-
-ORM 을 사용하는경우 동시성 제어에 문제가 발생하는 케이스가 존재한다. 
-
-테이블과 데이터 예제
-
-
-Table guild
-{
-	gid			bigint,
-	score		bigint
-}
-
-
-길드전 컨텐츠와 같이 동일한데이터를 다수의 유저가 접근 가능한 상황에 많이 발생하는 유형이다.
-
-ORM 을 사용하지 않고, 데이터베이스 수준에서 한개의 명령으로 처리하면 문제가 발생하지 않는다.
-
-ex > update guild set score = score + 10 where gid = 1;
-
-
-하지만 ORM 을 사용하는 경우, 일반적으로 아래와 같이 데이터가 처리될것이다.
-
-long gid = 1;
-var guild = context.guild.Find(gid);			// score 가 10이라고 가정
-guild.score += 10;								// score 가 20이 됨										<---------------- 이부분 A 라고 명명
-context.SaveChange();							// 데이터베이스에 20을 덮어씀
-
-위와 같이 코드를 작성하는경우
-
-1. 데이터베이스에서 gid 가 1인 데이터를 찾아서 반환한다.
-2. 반환된 guild.score 에 10을 더한다.
-3. 10을 더한 20을 데이터베이스에 덮어쓴다.
-
-하나의 context 만 데이터를 처리하면 전혀 문제가 될것이 없다.
-
-하지만, 여러 context 에서 데이터를 처리 한다면 
-
-시점에 따라서 context 에서 얻어온 데이터가 10이 될수도, 다른 context 에서 수정된 20이 될수도 있다는 것이다.
-
-
-만약 A 시점에 context swtching, 또 다른 머신에서 데이터를 처리한다면 어떻게 될가?
-
-long gid = 1;
-var guild = context.guild.Find(gid);			// score 가 10이라고 가정									<---------------- 이부분 B 라고 명명
-guild.score += 10;								// score 가 20이 됨										<---------------- 이부분 C 라고 명명
-context.SaveChange();							// 데이터베이스에 20을 덮어씀
-
-
-만약 비슷한 시점에 동일한 데이터를 처리 한다고 가정해보자. 
-
-이경우, A 시점에서 데이터를 변경했지만 사실상 이건 메모리에 존재하는 데이터를 변경한것일뿐, 데이터베이스에 변경을 한것은 아니다.
-
-때문에, B 에서 데이터를 읽어올땐, 아직 데이터베이스의 데이터가 변경되기전이기때문에 score 는 10이 된다.
-
-따라서, C 에서는 데이터가 20이된다. 구현하고자 하는 방향은 score 가 30이 되기를 원하겠지만 데이터베이스에 기록되는것은 20일것이다.
-
-
-위와 같은 이슈가 존재하기때문에 ORM 에서는 "낙관적 동시성제어", "비관적 동시성제어" 라는 용어가 존재한다.
-
-"낙관적 동시성제어" 의 경우는 데이터의 정합성이 깨진것을 감지하고 충돌을 일으켜서 사용자에게 알린뒤 '재시도' 혹은 '실패' 처리를 진행하도록 해서 문제를 해결한다.
-
-"비관적 동시성제어" 의 경우는 데이터베이스의 잠금을 사용하여, 데이터정합성이 깨지는것을 방지하는것을 말한다. 하지만 비관적 동시성제어의 경우 잠금을 사용하기때문에, 성능에 영향을 미칠수있다.
-
-
-- 낙관적 동시성 제어의 예제 -
-Table 에 Timestamp 값을 두고, Update 할때마다 기록을 해서, SaveChange 할때 검사하는 데이터가 이미 수정된것인지 확인하는방법
-
-EF Core 의 경우 [Timestamp] 속성을 지정하면 버전값으로 자동 매핑된다.
-
-Table 생성할때는, "RowVersion BINARY(8) NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP" 와 같이 Update 할때 자동으로 Timestamp 값이 변경되도록 설정해야된다.
-
-
-
-- 비관적 동시성 제어의 예제 -
-사실 비관적 동시성 제어의 예제는 일반적인 처리와 비슷하다. 
-
-트랜잭션과 함께 UPDLOCK 을 사용하는 방법이다. 아래는 MSSQL 기준이다.
-
-UDLOCK 을 사용하게되면, select 할때 x 락( 독점락 ) 이 걸리면서 다른 컨텍스트에서 select 를 진행할경우 트랜잭션이 끝날때까지 대기하게 된다. 
-이유는 트랜잭션을 걸고 UPDLOCK 힌트를 걸었기때문에 트랜잭션이 끝날때까지 UPDLOCK 이 풀리지 않게된다.
-
-using var transaction = await context.Database.BeginTransactionAsync();
-
-var guild = await context.Users
-    .FromSqlRaw("SELECT * FROM guild WITH (UPDLOCK) WHERE gid = {0}", gid)
-    .FirstOrDefaultAsync();
-
-guild.score += 10;
-
-await context.SaveChangesAsync();
-await transaction.CommitAsync();
-
-
-
-따라서, 상황에 따라 낙관적제어와 비관적제어를 같이 사용하는것이 도움이 될것이다.
-
-일반적인 비동기 게임의 경우 "내 데이터" 를 수정하는것은 "나" 뿐이기 때문에 낙관적 동시성 제어로 충분히 처리가 가능할것이다.
-
-
-ORM 에 익숙하지 않다면, ORM 은 클래스 매핑용으로만 사용하고 데이터베이스 로직처리는, 프로시저나 날쿼리를 이용하는것도 좋은방법이다.

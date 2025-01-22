@@ -1,5 +1,3 @@
-using DBMediator.Contexts;
-using DBMediator.Models;
 using Newtonsoft.Json.Serialization;
 using ServerCommon;
 
@@ -34,8 +32,6 @@ builder.Services
 });
 
 
-builder.Services.AddScoped<DbContextFactory>();
-
 
 // Swagger
 builder.Services.AddEndpointsApiExplorer();
@@ -46,15 +42,11 @@ builder.Services.AddSwaggerGen();
 VersionChecker.GlobalConfig.CDN_Prefix = builder.Configuration.GetValue("CDNUrl", string.Empty)!;
 
 // Setup DBConfig
-// DBMediator.Contexts.DbConfig.Instance.Setup(builder.Configuration);
+DBMediator.Contexts.DbConfig.Instance.Setup(builder.Configuration);
 
 
 
 var app = builder.Build();
-
-
-DbConfig.Instance.Setup(builder.Configuration.GetConnectionString("AccountDBString")!);
-
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

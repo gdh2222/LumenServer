@@ -1,4 +1,5 @@
-using DBMediator.Contexts;
+using LobbyServer;
+using MySqlConnector;
 using Newtonsoft.Json.Serialization;
 using ServerCommon;
 
@@ -40,13 +41,11 @@ builder.Services.AddSwaggerGen();
 
 
 // Setup DBConfig
-builder.Services.AddScoped<DbContextFactory>();
+DBMediator.Contexts.DbConfig.Instance.Setup(builder.Configuration);
 
 
 
 var app = builder.Build();
-
-DbConfig.Instance.Setup(builder.Configuration.GetConnectionString("AccountDBString")!);
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

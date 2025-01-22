@@ -1,4 +1,7 @@
-﻿using DBMediator.Models.Account;
+﻿using Dapper;
+using DBMediator.Models.AccountDB;
+using Microsoft.Extensions.Configuration;
+using MySqlConnector;
 namespace DBMediator.Contexts
 {
     public class DbConfig
@@ -11,32 +14,42 @@ namespace DBMediator.Contexts
         }
         #endregion
 
+
+        #region SingleDB Connection Strings
+        public string AccountDBString { get; private set; } = string.Empty;
+        public string AdminDBString { get; private set; } = string.Empty;
+        #endregion
+
         #region
         protected List<ConfigSharddb> _shardlist = new List<ConfigSharddb>();
         #endregion
 
-        public void Setup(string accountDbString)
+        public void Setup(IConfiguration configuration)
         {
-            LoadGameDBStrings(accountDbString);
+            AccountDBString = configuration.GetConnectionString("AccountDBString") ?? string.Empty;
+            AdminDBString = configuration.GetConnectionString("AdminDBString") ?? string.Empty;
+
+            LoadGameDBStrings();
         }
 
-        private void LoadGameDBStrings(string dbString)
+        private void LoadGameDBStrings()
         {
-            using (var dbContext = new DbContextAccount(dbString))
+            using (MySqlConnection connection = new MySqlConnection(AccountDBString))
             {
-                var shardList = dbContext.ConfigSharddbs.ToList();
-                if (0 >= shardList.Count)
+                connection.Open();
+                var shardList = connection.Query<ConfigSharddb>("SELECT * FROM config_sharddb;").ToList();
+                if(0 >= shardList.Count)
                 {
                     throw new InvalidDataException("no rows, accountdb -> gamedb strings [config_db]");
                 }
 
-
-                foreach (var shardInfo in shardList)
+                foreach(var shardInfo in shardList)
                 {
-                    if (null != _shardlist.FirstOrDefault(row => row.Uid == shardInfo.Uid))
+                    if( null != _shardlist.FirstOrDefault(row => row.Uid == shardInfo.Uid))
                     {
                         throw new InvalidDataException($"duplicate shard data, uid:{shardInfo.Uid}");
                     }
+
 
                     _shardlist.Add(shardInfo);
                 }
